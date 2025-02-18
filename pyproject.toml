@@ -1,0 +1,18 @@
+[project]
+name = "unicorn-streamlit-example"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Jeff Taylor",email = "you@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "pydantic (>=2.10.6,<3.0.0)",
+    "langchain-huggingface (>=0.1.2,<0.2.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
