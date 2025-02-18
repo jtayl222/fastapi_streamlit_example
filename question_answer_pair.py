@@ -9,23 +9,20 @@ class AnswerPair(BaseModel):
     primary: str
     secondary: str
 
-    @model_serializer(mode="wrap")
-    def _serialize(self, handler):
-        d = handler(self)
-        d['primary'] = self.primary
-        d['secondary'] = self.secondary
-        return d
-
 class QASet(BaseModel):
     """
     Represents a set of questions and answers for a given session.
     """
     qa_set: Dict[str, AnswerPair]
 
-    @model_serializer(mode="wrap")
-    def _serialize(self, handler):
-        d = handler(self)
-        return {k: v for k, v in d['qa_set'].items()}
+    @model_serializer
+    def serialize(self):
+        return {
+            "qa_set": {
+                question: {"primary": pair.primary, "secondary": pair.secondary}
+                for question, pair in self.qa_set.items()
+            }
+        }
 
 class SessionData(BaseModel):
     """
@@ -34,3 +31,10 @@ class SessionData(BaseModel):
     """
     session_id: str
     qa_set: QASet
+
+    @model_serializer
+    def serialize(self):
+        return {
+            "session_id": self.session_id,
+            "qa_set": self.qa_set.serialize()
+        }
