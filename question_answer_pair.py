@@ -3,11 +3,11 @@ from pydantic import BaseModel, model_serializer
 
 class AnswerPair(BaseModel):
     """
-    Represents a pair of answers (primary and secondary) for a given question.
-    Primary is the main response, secondary can be supplemental info.
+    Represents a pair of answers (primary and transformed) for a given question.
+    Primary is the main response, transformed can be supplemental info.
     """
     primary: str
-    secondary: str
+    transformed: str
 
 class QASet(BaseModel):
     """
@@ -19,7 +19,7 @@ class QASet(BaseModel):
     def serialize(self):
         return {
             "qa_set": {
-                question: {"primary": pair.primary, "secondary": pair.secondary}
+                question: {"primary": pair.primary, "transformed": pair.transformed}
                 for question, pair in self.qa_set.items()
             }
         }

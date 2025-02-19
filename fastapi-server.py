@@ -27,7 +27,7 @@ def init_session() -> SessionData:
     session_id = str(uuid.uuid4())
     qa_set = {}
     for question in DEFAULT_QUESTIONS:
-        qa_set[question] = AnswerPair(primary="", secondary="")
+        qa_set[question] = AnswerPair(primary="", transformed="")
     session_data = SessionData(session_id=session_id, qa_set=QASet(qa_set=qa_set))
     sessions[session_id] = session_data
     return session_data
@@ -64,7 +64,10 @@ def submit_answers(submission: SessionData):
         raise HTTPException(status_code=404, detail="Session not found")
 
     qa_set : QASet = submission.qa_set
+    for question, pair in qa_set.qa_set.items():
+        pair.transformed = "result from llm transform call with data " + pair.primary
     sessions[session_id].qa_set = qa_set
+    ic(sessions[session_id])
 
     return sessions[session_id]
 

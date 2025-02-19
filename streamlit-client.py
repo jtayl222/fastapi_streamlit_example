@@ -44,11 +44,7 @@ def answer_questions():
             f"Primary answer ({question})",
             value=ap.primary
         )
-        secondary_ans = st.text_input(
-            f"Secondary answer ({question})",
-            value=ap.secondary
-        )
-        qa_set.qa_set[question] = AnswerPair(primary=primary_ans, secondary=secondary_ans)
+        qa_set.qa_set[question] = AnswerPair(primary=primary_ans, transformed=ap.transformed)
 
     ic(qa_set)
     st.session_state["qa_set"] = qa_set
@@ -85,7 +81,7 @@ def review_and_confirm():
     for question, answer_pair in qa_set.qa_set.items():
         st.write(f"**Question:** {question}")
         st.write(f"**Primary Answer:** {answer_pair.primary}")
-        st.write(f"**Secondary Answer:** {answer_pair.secondary}")
+        st.write(f"**Transformed Data:** {answer_pair.transformed}")
         st.write("---")
 
     if st.button("Confirm All Answers"):
