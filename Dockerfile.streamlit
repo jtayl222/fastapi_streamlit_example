@@ -1,0 +1,23 @@
+# Use the official Python image from the Docker Hub
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the container
+COPY . .
+
+# Set the PYTHONPATH environment variable
+ENV PYTHONPATH=/app
+
+# Expose the ports the apps run on
+EXPOSE 8000 8501
+
+# Command to run the application based on an environment variable
+CMD ["sh", "-c", "if [ \"$APP\" = 'streamlit' ]; then streamlit run app/streamlit_client.py; else uvicorn fastapi_server:app --host 0.0.0.0 --port 8000; fi"]

@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-service
+spec:
+  selector:
+    app: streamlit-client
+  ports:
+    - protocol: TCP
+      port: 8501
+      targetPort: 8501
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: streamlit-client
+  template:
+    metadata:
+      labels:
+        app: streamlit-client
+    spec:
+      containers:
+      - name: streamlit-client
+        image: localhost:5000/streamlit-client:latest
+        ports:
+        - containerPort: 8501
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONPATH
+          value: "/app"
+        - name: API_BASE_URL
+          value: "http://fastapi-service:8000"
+        command: ["streamlit", "run", "app/streamlit_client.py"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-streamlit-service
+spec:
+  selector:
+    app: fastapi-streamlit-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fastapi-app
+  template:
+    metadata:
+      labels:
+        app: fastapi-app
+    spec:
+      containers:
+      - name: fastapi-app
+        image: localhost:5000/fastapi-app:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONPATH
+          value: "/app"

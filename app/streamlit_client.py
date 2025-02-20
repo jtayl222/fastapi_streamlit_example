@@ -1,15 +1,25 @@
-from pprint import pprint
-
+import os
 import streamlit as st
 import requests
-from question_answer_pair import AnswerPair, SessionData, QASet
-from typing import Dict
+from app.question_answer_pair import AnswerPair, SessionData, QASet
 from icecream import ic
 ic.configureOutput(includeContext=True)
 
-API_BASE_URL = "http://127.0.0.1:8000"  # Adjust if your FastAPI runs elsewhere
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 def create_new_session():
+    """
+    Sends a GET request to the API to create a new session.
+
+    This function sends a GET request to the endpoint specified by 
+    `API_BASE_URL` with the path `/new_session`. If the request is 
+    successful (status code 200), it processes the response JSON and 
+    updates the Streamlit state. If the request fails, it displays an 
+    error message in the Streamlit app.
+
+    Returns:
+        None
+    """
     resp = requests.get(f"{API_BASE_URL}/new_session")
     if resp.status_code == 200:
         rest_json_to_st_state(resp)
@@ -17,6 +27,19 @@ def create_new_session():
         st.error(f"Failed to create a new session: {resp.text}")
 
 def rest_json_to_st_state(resp):
+    """
+    Updates the Streamlit session state with data from a JSON response.
+
+    Args:
+        resp: The response object containing JSON data.
+
+    Raises:
+        KeyError: If a required key is missing in the response data.
+
+    The function extracts session data from the JSON response, validates it,
+    and updates the Streamlit session state with the session ID and QA set.
+    If a required key is missing, an error message is displayed in Streamlit.
+    """
     session_data = SessionData.model_validate(resp.json())
     try:
         st.session_state["session_id"] = session_data.session_id
@@ -26,6 +49,16 @@ def rest_json_to_st_state(resp):
         st.error(f"Missing key in response data: {e}")
 
 def answer_questions():
+    """
+    Handles the process of answering questions in a Streamlit app.
+
+    This function sets up the "Answer Questions" page, retrieves the QA set from the session state,
+    allows the user to input primary answers for each question, and submits the answers to an API
+    endpoint for transformation.
+
+    Returns:
+        str: The next page to navigate to after submitting answers.
+    """
     next_page = "Answer Questions"
     st.title("Answer Questions")
 
@@ -63,6 +96,25 @@ def answer_questions():
     return next_page
 
 def review_and_confirm():
+    """
+    Displays a Streamlit interface for reviewing and confirming answers.
+
+    This function performs the following steps:
+    1. Sets the title of the Streamlit app to "Review and Confirm Answers".
+    2. Sends a GET request to the QA API to retrieve the QA set for the current session.
+    3. If the request is successful, updates the Streamlit session state with the retrieved data.
+    4. Checks if the QA set is loaded in the session state. If not, displays a warning message and exits.
+    5. Displays the questions and their corresponding answers from the QA set.
+    6. Provides a button to confirm all answers. If clicked, displays a success message.
+
+    Note:
+        - The function assumes that `API_BASE_URL` and `rest_json_to_st_state` are defined elsewhere in the code.
+        - The function uses the `ic` function from the `icecream` library for debugging purposes.
+        - The function relies on the `st` object from the Streamlit library for UI rendering.
+
+    Returns:
+        None
+    """
     st.title("Review and Confirm Answers")
 
     resp = requests.get(f"{API_BASE_URL}/qa", params={"session_id": st.session_state["session_id"]})
@@ -88,6 +140,17 @@ def review_and_confirm():
         st.success("All answers confirmed!")
 
 def main():
+    """
+    Main function to render the Streamlit sidebar and handle page navigation.
+
+    This function sets up the sidebar with a title and a selectbox for page navigation.
+    It checks if a session ID exists in the session state and creates a new session if not.
+    Depending on the selected page, it calls the appropriate function to render the page content.
+
+    Pages:
+    - "Answer Questions": Calls the answer_questions() function.
+    - "Review and Confirm": Calls the review_and_confirm() function.
+    """
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox("Select a page", ["Answer Questions", "Review and Confirm"])
 
